@@ -1,0 +1,61 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    
+    // Admin collection
+    match /admins/{adminId} {
+      allow read: if isAuthenticated() && request.auth.uid == adminId;
+      allow write: if isAdmin();
+    }
+    
+    // DEVELOPMENT RULES - More permissive for testing
+    // TODO: Replace with production rules before release
+    
+    // Users collection - Allow authenticated users to read/write their own data
+    match /users/{userId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // Orders collection - Allow authenticated users to read/write
+    match /orders/{orderId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // Reports collection - Allow authenticated users to read/write
+    match /reports/{reportId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // Safety alerts collection - Allow authenticated users to read/write
+    match /safety_alerts/{alertId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // OTP verifications collection - Allow authenticated users to read/write
+    match /otp_verifications/{otpId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // Rider verification collection - Allow authenticated users to read/write
+    match /rider_verifications/{verificationId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+
+    
+    // Test collection for connection testing
+    match /test/{document} {
+      allow read, write: if true;
+    }
+  }
+} 

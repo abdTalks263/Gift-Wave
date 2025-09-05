@@ -8,17 +8,31 @@
 import SwiftUI
 
 struct ContentView: View {
+    @EnvironmentObject var authViewModel: AuthViewModel
+    @EnvironmentObject var otpViewModel: OTPViewModel
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        Group {
+            if authViewModel.isAuthenticated {
+                if let user = authViewModel.currentUser {
+                    switch user.userType {
+                    case .sender:
+                        SenderHomeView()
+                    case .rider:
+                        RiderHomeView()
+                    }
+                } else {
+                    ProgressView("Loading user...")
+                }
+            } else {
+                LoginView()
+            }
         }
-        .padding()
     }
 }
 
 #Preview {
     ContentView()
+        .environmentObject(AuthViewModel())
+        .environmentObject(OTPViewModel())
 }

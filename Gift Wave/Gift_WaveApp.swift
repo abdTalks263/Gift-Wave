@@ -6,12 +6,24 @@
 //
 
 import SwiftUI
+import Firebase
 
 @main
 struct Gift_WaveApp: App {
+    @StateObject private var authViewModel = AuthViewModel()
+    @StateObject private var otpViewModel = OTPViewModel()
+
+    
+    init() {
+        FirebaseApp.configure()
+    }
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(authViewModel)
+                .environmentObject(otpViewModel)
+
         }
     }
 }

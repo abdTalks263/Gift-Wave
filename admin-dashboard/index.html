@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gift Wave Admin Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="screen">
+        <div class="login-container">
+            <div class="login-header">
+                <i class="fas fa-shield-alt"></i>
+                <h1>Gift Wave Admin</h1>
+                <p>Administrator Dashboard</p>
+            </div>
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" required placeholder="admin@giftwave.com">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required placeholder="Enter password">
+                </div>
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Sign In
+                </button>
+            </form>
+            <div id="loginError" class="error-message"></div>
+        </div>
+    </div>
+
+    <!-- Dashboard Screen -->
+    <div id="dashboardScreen" class="screen hidden">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <i class="fas fa-shield-alt"></i>
+                <span>Gift Wave Admin</span>
+            </div>
+            <div class="nav-menu">
+                <button class="nav-btn active" data-tab="pending">
+                    <i class="fas fa-clock"></i>
+                    Pending Riders
+                    <span id="pendingCount" class="badge">0</span>
+                </button>
+                <button class="nav-btn" data-tab="all">
+                    <i class="fas fa-users"></i>
+                    All Riders
+                </button>
+                <button class="nav-btn" data-tab="history">
+                    <i class="fas fa-history"></i>
+                    Verification History
+                </button>
+                <button class="nav-btn" data-tab="profile">
+                    <i class="fas fa-user-cog"></i>
+                    Profile
+                </button>
+                <button id="logoutBtn" class="nav-btn logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </button>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <!-- Pending Riders Tab -->
+            <div id="pendingTab" class="tab-content active">
+                <div class="tab-header">
+                    <h2>Pending Rider Applications</h2>
+                    <button id="refreshPending" class="refresh-btn">
+                        <i class="fas fa-sync-alt"></i>
+                        Refresh
+                    </button>
+                </div>
+                <div id="pendingRiders" class="riders-grid">
+                    <!-- Riders will be loaded here -->
+                </div>
+            </div>
+
+            <!-- All Riders Tab -->
+            <div id="allTab" class="tab-content">
+                <div class="tab-header">
+                    <h2>All Riders</h2>
+                    <div class="search-container">
+                        <input type="text" id="searchRiders" placeholder="Search riders...">
+                        <select id="statusFilter">
+                            <option value="">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="banned">Banned</option>
+                        </select>
+                        <button id="refreshAll" class="refresh-btn">
+                            <i class="fas fa-sync-alt"></i>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+                <div id="allRiders" class="riders-grid">
+                    <!-- All riders will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Verification History Tab -->
+            <div id="historyTab" class="tab-content">
+                <div class="tab-header">
+                    <h2>Verification History</h2>
+                    <button id="refreshHistory" class="refresh-btn">
+                        <i class="fas fa-sync-alt"></i>
+                        Refresh
+                    </button>
+                </div>
+                <div id="verificationHistory" class="history-list">
+                    <!-- History will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Profile Tab -->
+            <div id="profileTab" class="tab-content">
+                <div class="profile-container">
+                    <div class="profile-header">
+                        <i class="fas fa-user-shield"></i>
+                        <h2>Admin Profile</h2>
+                    </div>
+                    <div id="adminProfile" class="profile-info">
+                        <!-- Admin info will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Rider Detail Modal -->
+    <div id="riderModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Rider Details</h3>
+                <button class="close-btn" onclick="closeRiderModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="riderDetails" class="modal-body">
+                <!-- Rider details will be loaded here -->
+            </div>
+            <div class="modal-actions">
+                <button id="approveBtn" class="action-btn approve">
+                    <i class="fas fa-check"></i>
+                    Approve
+                </button>
+                <button id="rejectBtn" class="action-btn reject">
+                    <i class="fas fa-times"></i>
+                    Reject
+                </button>
+                <button id="banBtn" class="action-btn ban">
+                    <i class="fas fa-ban"></i>
+                    Ban
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rejection Reason Modal -->
+    <div id="reasonModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Provide Reason</h3>
+                <button class="close-btn" onclick="closeReasonModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <textarea id="rejectionReason" placeholder="Enter reason for rejection/ban..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button id="confirmReason" class="action-btn">
+                    Confirm
+                </button>
+                <button onclick="closeReasonModal()" class="action-btn secondary">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html> 
